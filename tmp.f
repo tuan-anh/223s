@@ -13,7 +13,7 @@ c
       common/constant/pi,sigmav,rmin,rmax,xdelta
       common/meas/profmeas(2,2500,38),smeas(2,2500)  
       data xdelta,sigmav/0.02,1.5/
-      data rmin,rmax/.1,5./
+      data rmin,rmax/.05,5./
       call HLIMAP(20000,'MAP')
 c      call hbook1(101,'cphi', 2500.,0.,2500.,0.)
       pi=2.*acos(0.)
@@ -30,7 +30,9 @@ c
       enddo
       do ig=1,1000
          garea(ig)=garea(ig)/garea(1000)
-      enddo   
+      enddo
+
+      
 c
 c all coordinates in arcseconds centered on the centre of the star
 c rmin and rmax define the range in r over which we work
@@ -75,22 +77,26 @@ c
       real par(14)
       common/model/profmod(2500,38),garea(1000)
       common/constant/pi,sigmav,rmin,rmax,xdelta
-      data par/14.,2.4,0.,3.,-2.,4.,-.8,.8,.45,0.,0.,0.,0.,.7/
+ccc      data par/12.,.01,0.,0.1,0.,0.,-.5,.2,.01,0.,0.3,0.,0.,0./
+      data par/11.5,.5,0.,0.1,0.5,1.,-.5,1.,.01,0.,0.3,0.,0.,0./
+
+ccc      data par/1.,11.,.87,.5,11.5,1.,1.5,1.,.5,2.5/
+
 c parameters which cannot change much
       theta=1.*pi/180.
-      omega=15.*pi/180.
-      cjet=0.845
+      omega=11.*pi/180.
+      cjet=0.87
       rdisk=1.5
 c jet expansion velocity (~10.)
       vjet=par(1)
+c jet thickness (~.05)
+      dcjet=par(2)
 c jet velocity gradient at small r (~.2)
-      pjet=par(2)
+      pjet=par(3)
 c jet density enhancement (~.5)
-      rhojet=par(3)
+      rhojet=par(4)
 c slow wind expansion velocity (~1.)
-      vwind=par(4)
-c r power of density
-      pexp=par(5)
+      vwind=par(5)
 c disk rotation velocity (~1.,-.5)
       vrot=par(6)
       prot=par(7)
@@ -104,7 +110,6 @@ c smearing
       smr0=par(11)
       smrdisk=par(12)
       smrjet=par(13)
-      qjet=par(14)
       rho=0.	
       v=0.
       r2=x**2+y**2+z**2
@@ -115,7 +120,6 @@ c smearing
       co=cos(omega)
       so=sin(omega)
       cphi=(x/r)*st+(y/r)*ct*so+(z/r)*ct*co 
-      if(abs(cphi).gt.cjet) return
 c calpha for projection of radial velocity on line of sight
       calpha=x/r
 c cvel for projection of tangential velocity on line of sight
@@ -126,15 +130,21 @@ c cvel for projection of tangential velocity on line of sight
       cvel=velx/vel
 c
       shape=exp(-.5*(r*cphi)**2/adisk**2)
-      fc=abs(cphi)/cjet
+      fc=(abs(cphi)-cjet)/cjet
+      if(fc.gt.1.) fc=1.
       fr=r/rdisk
       fdisk=shape/(1.+exp(-(fr-1.)/dfr))
-      vexp=vwind+vjet*fc**pjet*(1.-.2*fr)
-      dv=vrot*fr**prot*fdisk
-c      rho=(1.+rhojet*fc**pjet)*fr**pexp+rhodisk*fdisk
-      rho=fr**(pexp+fc*qjet)
+      gr=1.
+      if(fr.lt.1.)gr=fr**pjet
+c      fjet=exp(-.5*fc**2/dcjet**2)*gr      
+      fjet=exp(-.5*(cjet*fc)**2/dcjet**2)*gr      
+      fjet=0.
+      if(abs(cphi).gt..85.and.abs(cphi).lt..86)fjet=1.
+      vexp=vwind+vjet*fjet
+      dv=vrot*fr**prot
+      rho=(rhojet*fjet)+rhodisk*fdisk
       v=vexp*calpha+dv*cvel
-      sigmav=smr0+smrdisk*fdisk+smrjet*fc
+      sigmav=smr0+smrdisk*fdisk+smrjet*fjet
       fabs=0.
       call fillprofmod(v,rho,ij)  
       return
@@ -175,14 +185,12 @@ c	namely I(x+dx)=I(x)+rho*xdelta*(1.-fabs*I(x))
          vhi=vlo+0.4
          ihi=1
          ilo=1000
-         if(sigmav.le.0.)then
-            weight=1.
-            goto 1
+         if(sigmav.gt.0.)then
+            ihi=ifix(((vhi-v)/sigmav+3.)/.006)
+            if(ihi.gt.1000)ihi=1000
+            ilo=ifix(((vlo-v)/sigmav+3.)/.006)
+            if(ilo.lt.1)ilo=1
          endif
-         ihi=ifix(((vhi-v)/sigmav+3.)/.006)
-         if(ihi.gt.1000)ihi=1000
-         ilo=ifix(((vlo-v)/sigmav+3.)/.006)
-         if(ilo.lt.1)ilo=1
          weight=0.
          if(ihi.lt.1.or.ihi.gt.1000.or.ilo.lt.1.or.ilo.gt.1000)
      &   goto 1
@@ -224,7 +232,7 @@ c$$$      call hbook1(34,'check',38.,0.,38.,0.)
       enddo
 
 
-      center=.true.
+      center=.false.
       between=.false.
       do ij=1,2500
          j=ij/50+1
@@ -304,7 +312,7 @@ c$$$               if(ij.eq.175)call hf1(31,float(k)-.5,profmod(ij,k))
 c$$$               if(ij.eq.175)call hf1(32,float(k)-.5,profmeas(1,ij,k))
 c$$$               if(ij.eq.1285)call hf1(33,float(k)-.5,profmod(ij,k))
 c$$$               if(ij.eq.1285)call hf1(34,float(k)-.5,profmeas(1,ij,k))
-c$$$               if(i.gt.10..and.i.lt.40..and.j.gt.15..and.j.lt.35.)goto 1
+               if(i.gt.10..and.i.lt.40..and.j.gt.10..and.j.lt.40.)goto 1
                if (i.ge.25.and.i.le.26.and.j.ge.25.and.j.le.26)goto 1
                smeas(1,ij)=smeas(1,ij)+aa
                smeas(2,ij)=smeas(2,ij)+bb
@@ -323,7 +331,7 @@ c$$$               if(i.gt.10..and.i.lt.40..and.j.gt.15..and.j.lt.35.)goto 1
          j=ij/50+1
          i=ij-50*(j-1) 
          do k=1,38
-c            if(i.gt.10..and.i.lt.40..and.j.gt.15..and.j.lt.35.)then
+            if(i.gt.10..and.i.lt.40..and.j.gt.10..and.j.lt.40.)goto 2
                if (i.ge.25.and.i.le.26.and.j.ge.25.and.j.le.26)goto 2
             error2=f1**2*profmod(ij,k)**2+profmeas(1,ij,k)**2
             if(error2.gt.0.)then
@@ -337,7 +345,6 @@ c            if(i.gt.10..and.i.lt.40..and.j.gt.15..and.j.lt.35.)then
             call hf1(44,float(j)-.5,f1*profmod(ij,k))
             call hf1(45,float(k)-.5,profmeas(1,ij,k))
             call hf1(46,float(k)-.5,f1*profmod(ij,k))
-c         endif
  2          continue
          enddo
       enddo

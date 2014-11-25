@@ -1,0 +1,30 @@
+set bwid 6.
+set xmgr .5				* X MarGin Right
+set ymgu 1				* Y MarGin Up
+set xmgl 1.				* X MarGin Left
+set ymgl 2.5				* Y MarGin Low
+set hwid 5.
+set vsize .15
+zon 5 5
+set xwin 0.75					* distance between windows
+set ywin 0.005
+opt logy
+opt stat
+
+do jj=1,5
+do ii=1,5
+id1=5*(5-[jj])+[ii]+400
+id2=5*(5-[jj])+[ii]+425
+*if ([ii].eq.1 .and. [jj].eq.5) then
+if ([ii].eq.1) then
+   null 0. 38. 1. 200. * full map *
+*   null 0. 38. 1. 20. * centre *
+else
+   null 0. 38. 1. 200. 
+endif
+set hcol 2
+h/pl [id1] s
+set hcol 4
+h/pl [id2] s
+enddo
+enddo

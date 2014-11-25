@@ -1,0 +1,9 @@
+nt/cre 1 aaa 4 ! ! i1 j1 k1 s1
+nt/cre 2 bbb 4 ! ! i2 j2 k2 s2
+v/cre x(85000)     
+nt/read 1 fort.13
+nt/read 2 fort.14
+nt/pl 1.s1
+color 1 1
+nt/pl 2.s2 ! ! ! ! s
+sigma x=s1-s2

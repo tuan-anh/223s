@@ -1,0 +1,10 @@
+opt nbox
+opt logy
+set vsize .4
+set hwid 5.
+id2 = 142
+id1 = [id1]-1
+set hcol 2
+h/pl [id2]
+set hcol 1
+h/pl [id1] s

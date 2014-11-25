@@ -1,0 +1,22 @@
+set hcol 1
+h/pl 12   
+set hcol 2
+h/pl 13 s 
+set hcol 3
+h/pl 14 s 
+set hcol 4
+h/pl 15 s 
+set hcol 5
+h/pl 16 s 
+set hcol 6
+h/pl 17 s 
+*set hcol 7
+*h/pl 18 s 
+*set hcol 1
+*h/pl 19 s 
+*set hcol 2
+*h/pl 20 s 
+*set hcol 3
+*h/pl 21 s 
+*set hcol 4
+*h/pl 22 s 

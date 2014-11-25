@@ -1,0 +1,17 @@
+opt nbox
+opt logy
+set vsize .45
+set hwid 5.
+id1 = 111
+id2 = [id1]+2
+id3 = [id1]+4
+id4 = [id1]+6
+set hcol 1
+h/pl [id1]
+set hcol 2
+h/pl [id2] s
+set hcol 4
+h/pl [id3] s
+set hcol 6
+h/pl [id4] s
+

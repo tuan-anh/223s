@@ -1,3 +1,7 @@
+cc
+c This version for fiting outer part (cone only, no disk)
+c 
+c
       program rrtgl_crude  
 c
 c this version is for the Red rectangle using ALMA data
@@ -75,11 +79,11 @@ c
       real par(14)
       common/model/profmod(2500,38),garea(1000)
       common/constant/pi,sigmav,rmin,rmax,xdelta
-      data par/14.,2.4,0.,3.,-2.,4.,-.8,.8,.45,0.,0.,0.,0.,.7/
+      data par/13.,2.65,1.,.7,-2.,0.,-.5,.2,.01,0.,0.,0.,0.,0./
 c parameters which cannot change much
       theta=1.*pi/180.
-      omega=15.*pi/180.
-      cjet=0.845
+      omega=14.*pi/180.
+      cjet=0.84
       rdisk=1.5
 c jet expansion velocity (~10.)
       vjet=par(1)
@@ -104,7 +108,6 @@ c smearing
       smr0=par(11)
       smrdisk=par(12)
       smrjet=par(13)
-      qjet=par(14)
       rho=0.	
       v=0.
       r2=x**2+y**2+z**2
@@ -129,10 +132,11 @@ c
       fc=abs(cphi)/cjet
       fr=r/rdisk
       fdisk=shape/(1.+exp(-(fr-1.)/dfr))
-      vexp=vwind+vjet*fc**pjet*(1.-.2*fr)
-      dv=vrot*fr**prot*fdisk
-c      rho=(1.+rhojet*fc**pjet)*fr**pexp+rhodisk*fdisk
-      rho=fr**(pexp+fc*qjet)
+      gr=1.
+      if(fr.lt.1.)gr=fr**pjet
+      vexp=(vwind+vjet*fc**pjet)
+      dv=vrot*fr**prot
+      rho=(1.+rhojet*fc**pjet)*fr**pexp
       v=vexp*calpha+dv*cvel
       sigmav=smr0+smrdisk*fdisk+smrjet*fc
       fabs=0.
@@ -224,7 +228,7 @@ c$$$      call hbook1(34,'check',38.,0.,38.,0.)
       enddo
 
 
-      center=.true.
+      center=.false.
       between=.false.
       do ij=1,2500
          j=ij/50+1
@@ -304,7 +308,7 @@ c$$$               if(ij.eq.175)call hf1(31,float(k)-.5,profmod(ij,k))
 c$$$               if(ij.eq.175)call hf1(32,float(k)-.5,profmeas(1,ij,k))
 c$$$               if(ij.eq.1285)call hf1(33,float(k)-.5,profmod(ij,k))
 c$$$               if(ij.eq.1285)call hf1(34,float(k)-.5,profmeas(1,ij,k))
-c$$$               if(i.gt.10..and.i.lt.40..and.j.gt.15..and.j.lt.35.)goto 1
+               if(i.gt.10..and.i.lt.40..and.j.gt.15..and.j.lt.35.)goto 1
                if (i.ge.25.and.i.le.26.and.j.ge.25.and.j.le.26)goto 1
                smeas(1,ij)=smeas(1,ij)+aa
                smeas(2,ij)=smeas(2,ij)+bb
@@ -323,7 +327,7 @@ c$$$               if(i.gt.10..and.i.lt.40..and.j.gt.15..and.j.lt.35.)goto 1
          j=ij/50+1
          i=ij-50*(j-1) 
          do k=1,38
-c            if(i.gt.10..and.i.lt.40..and.j.gt.15..and.j.lt.35.)then
+            if(i.gt.10..and.i.lt.40..and.j.gt.15..and.j.lt.35.)then
                if (i.ge.25.and.i.le.26.and.j.ge.25.and.j.le.26)goto 2
             error2=f1**2*profmod(ij,k)**2+profmeas(1,ij,k)**2
             if(error2.gt.0.)then
@@ -337,7 +341,7 @@ c            if(i.gt.10..and.i.lt.40..and.j.gt.15..and.j.lt.35.)then
             call hf1(44,float(j)-.5,f1*profmod(ij,k))
             call hf1(45,float(k)-.5,profmeas(1,ij,k))
             call hf1(46,float(k)-.5,f1*profmod(ij,k))
-c         endif
+         endif
  2          continue
          enddo
       enddo

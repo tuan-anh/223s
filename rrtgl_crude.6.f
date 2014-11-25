@@ -1,3 +1,7 @@
+ccc
+cc    Date: 24 Nov 2014
+cc     This is a backup version before trying a new subroutine physics 
+cc
       program rrtgl_crude  
 c
 c this version is for the Red rectangle using ALMA data
@@ -13,7 +17,7 @@ c
       common/constant/pi,sigmav,rmin,rmax,xdelta
       common/meas/profmeas(2,2500,38),smeas(2,2500)  
       data xdelta,sigmav/0.02,1.5/
-      data rmin,rmax/.1,5./
+      data rmin,rmax/.05,5./
       call HLIMAP(20000,'MAP')
 c      call hbook1(101,'cphi', 2500.,0.,2500.,0.)
       pi=2.*acos(0.)
@@ -30,7 +34,9 @@ c
       enddo
       do ig=1,1000
          garea(ig)=garea(ig)/garea(1000)
-      enddo   
+      enddo
+
+      
 c
 c all coordinates in arcseconds centered on the centre of the star
 c rmin and rmax define the range in r over which we work
@@ -75,38 +81,24 @@ c
       real par(14)
       common/model/profmod(2500,38),garea(1000)
       common/constant/pi,sigmav,rmin,rmax,xdelta
-      data par/14.,2.4,0.,3.,-2.,4.,-.8,.8,.45,0.,0.,0.,0.,.7/
-c parameters which cannot change much
-      theta=1.*pi/180.
-      omega=15.*pi/180.
-      cjet=0.845
-      rdisk=1.5
-c jet expansion velocity (~10.)
-      vjet=par(1)
-c jet velocity gradient at small r (~.2)
-      pjet=par(2)
-c jet density enhancement (~.5)
-      rhojet=par(3)
-c slow wind expansion velocity (~1.)
-      vwind=par(4)
-c r power of density
-      pexp=par(5)
-c disk rotation velocity (~1.,-.5)
+      data par/3.,13.,.85,1.,18.,1.35,1.5,3.,1.7,3.5,.5,.2,2.,0./
+      theta=par(1)*pi/180.
+      omega=par(2)*pi/180.
+      cbicone=par(3)
+      vdisk=par(4)
+      vbicone=par(5)
       vrot=par(6)
-      prot=par(7)
-c disk thickness (~.5)
+      rrot=par(7)
       adisk=par(8)
-c disk limb (~.1)
-      dfr=par(9)
-c disk density (~1.)
-      rhodisk=par(10)
-c smearing
-      smr0=par(11)
-      smrdisk=par(12)
-      smrjet=par(13)
-      qjet=par(14)
-      rho=0.	
+      delta=par(9)
+      power=par(10)
+      sig0=par(11)
+      sig1=par(12)
+      sig2=par(13)
+      atemp=par(14)
+      rho=0.
       v=0.
+      dv=0.
       r2=x**2+y**2+z**2
       r=sqrt(r2)
       if(r.lt.rmin.or.r.gt.rmax)return
@@ -115,7 +107,8 @@ c smearing
       co=cos(omega)
       so=sin(omega)
       cphi=(x/r)*st+(y/r)*ct*so+(z/r)*ct*co 
-      if(abs(cphi).gt.cjet) return
+       if(abs(cphi).gt.cbicone) return
+      sigmav=sig0+sig1*(rrot-r)/rrot+sig2*(abs(cphi)/cbicone)**power
 c calpha for projection of radial velocity on line of sight
       calpha=x/r
 c cvel for projection of tangential velocity on line of sight
@@ -124,21 +117,24 @@ c cvel for projection of tangential velocity on line of sight
       velz=(x/r)*ct*so-(y/r)*st
       vel=sqrt(velx**2+vely**2+velz**2)
       cvel=velx/vel
-c
-      shape=exp(-.5*(r*cphi)**2/adisk**2)
-      fc=abs(cphi)/cjet
-      fr=r/rdisk
-      fdisk=shape/(1.+exp(-(fr-1.)/dfr))
-      vexp=vwind+vjet*fc**pjet*(1.-.2*fr)
-      dv=vrot*fr**prot*fdisk
-c      rho=(1.+rhojet*fc**pjet)*fr**pexp+rhodisk*fdisk
-      rho=fr**(pexp+fc*qjet)
-      v=vexp*calpha+dv*cvel
-      sigmav=smr0+smrdisk*fdisk+smrjet*fc
+      vcone=(abs(cphi)/cbicone)**power*(vbicone-vdisk)
+      if(r.ge.rrot)v0=vcone+vdisk
+      if(r.lt.rrrot)v0=vcone*(1.-(r-rrot)**2/rrot**2)+vdisk
+      v=v0*calpha 
+      if(r.ge.rrot)rho=1./4./pi*(rrot/r)**2*
+     &     (1.+(abs(cphi)/cbicone)**power)/2.
+      if(r.lt.rrot)then
+         shape=exp(-.5*(r*cphi)**2/delta**2)
+         rho=1/8./pi*(3.-(r/rrot)**2)*(1.+adisk*shape)
+         dv=vrot*shape*(r/rrot)**(-.5)
+         v=v+dv*cvel
+      endif           
+      rho=rho*(1.-atemp*r/rrot)
       fabs=0.
       call fillprofmod(v,rho,ij)  
       return
       end
+
 c!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       
       subroutine fillprofmod(v,rho,ij)
@@ -173,16 +169,8 @@ c	namely I(x+dx)=I(x)+rho*xdelta*(1.-fabs*I(x))
       do iv=ivmin,ivmax
          vlo=-7.2+0.4*float(iv-1)
          vhi=vlo+0.4
-         ihi=1
-         ilo=1000
-         if(sigmav.le.0.)then
-            weight=1.
-            goto 1
-         endif
          ihi=ifix(((vhi-v)/sigmav+3.)/.006)
-         if(ihi.gt.1000)ihi=1000
          ilo=ifix(((vlo-v)/sigmav+3.)/.006)
-         if(ilo.lt.1)ilo=1
          weight=0.
          if(ihi.lt.1.or.ihi.gt.1000.or.ilo.lt.1.or.ilo.gt.1000)
      &   goto 1
@@ -224,8 +212,8 @@ c$$$      call hbook1(34,'check',38.,0.,38.,0.)
       enddo
 
 
-      center=.true.
-      between=.false.
+      center=.false.
+      between=.true.
       do ij=1,2500
          j=ij/50+1
          i=ij-50*(j-1)    
@@ -304,7 +292,7 @@ c$$$               if(ij.eq.175)call hf1(31,float(k)-.5,profmod(ij,k))
 c$$$               if(ij.eq.175)call hf1(32,float(k)-.5,profmeas(1,ij,k))
 c$$$               if(ij.eq.1285)call hf1(33,float(k)-.5,profmod(ij,k))
 c$$$               if(ij.eq.1285)call hf1(34,float(k)-.5,profmeas(1,ij,k))
-c$$$               if(i.gt.10..and.i.lt.40..and.j.gt.15..and.j.lt.35.)goto 1
+               if(i.gt.10..and.i.lt.40..and.j.gt.10..and.j.lt.40.)goto 1
                if (i.ge.25.and.i.le.26.and.j.ge.25.and.j.le.26)goto 1
                smeas(1,ij)=smeas(1,ij)+aa
                smeas(2,ij)=smeas(2,ij)+bb
@@ -323,7 +311,7 @@ c$$$               if(i.gt.10..and.i.lt.40..and.j.gt.15..and.j.lt.35.)goto 1
          j=ij/50+1
          i=ij-50*(j-1) 
          do k=1,38
-c            if(i.gt.10..and.i.lt.40..and.j.gt.15..and.j.lt.35.)then
+            if(i.gt.10..and.i.lt.40..and.j.gt.10..and.j.lt.40.)then
                if (i.ge.25.and.i.le.26.and.j.ge.25.and.j.le.26)goto 2
             error2=f1**2*profmod(ij,k)**2+profmeas(1,ij,k)**2
             if(error2.gt.0.)then
@@ -337,8 +325,8 @@ c            if(i.gt.10..and.i.lt.40..and.j.gt.15..and.j.lt.35.)then
             call hf1(44,float(j)-.5,f1*profmod(ij,k))
             call hf1(45,float(k)-.5,profmeas(1,ij,k))
             call hf1(46,float(k)-.5,f1*profmod(ij,k))
-c         endif
  2          continue
+            endif
          enddo
       enddo
       print*,'chi1, chi2: ', chi1/1.e3,chi2/1.e3

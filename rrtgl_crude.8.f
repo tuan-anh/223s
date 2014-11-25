@@ -75,12 +75,12 @@ c
       real par(14)
       common/model/profmod(2500,38),garea(1000)
       common/constant/pi,sigmav,rmin,rmax,xdelta
-      data par/14.,2.4,0.,3.,-2.,4.,-.8,.8,.45,0.,0.,0.,0.,.7/
+      data par/12.,2.4,0.,.25,-1.7,1.1,-1.2,.5,.5,0.,0.,0.,0.,0./
 c parameters which cannot change much
       theta=1.*pi/180.
       omega=15.*pi/180.
       cjet=0.845
-      rdisk=1.5
+      rdisk=1.7
 c jet expansion velocity (~10.)
       vjet=par(1)
 c jet velocity gradient at small r (~.2)
@@ -104,7 +104,6 @@ c smearing
       smr0=par(11)
       smrdisk=par(12)
       smrjet=par(13)
-      qjet=par(14)
       rho=0.	
       v=0.
       r2=x**2+y**2+z**2
@@ -129,10 +128,9 @@ c
       fc=abs(cphi)/cjet
       fr=r/rdisk
       fdisk=shape/(1.+exp(-(fr-1.)/dfr))
-      vexp=vwind+vjet*fc**pjet*(1.-.2*fr)
-      dv=vrot*fr**prot*fdisk
-c      rho=(1.+rhojet*fc**pjet)*fr**pexp+rhodisk*fdisk
-      rho=fr**(pexp+fc*qjet)
+      vexp=(vwind+vjet*fc**pjet)
+      dv=vrot*fr**prot
+      rho=(1.+rhojet*fc**pjet)*fr**pexp+rhodisk*fdisk
       v=vexp*calpha+dv*cvel
       sigmav=smr0+smrdisk*fdisk+smrjet*fc
       fabs=0.

@@ -1,0 +1,4 @@
+null 0. 34. -10. 200.
+do id=51,75
+h/pl [id] s
+enddo

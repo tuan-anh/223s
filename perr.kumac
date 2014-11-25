@@ -1,0 +1,7 @@
+v/cre x(5) r
+***v/inp x 0.5 .7 .9 1.1 1.2
+v/inp x 5. 7. 9. 11. 12.
+id=10
+put_vect/errors [id] err
+opt nstat
+h/plot [id]

@@ -1,0 +1,58 @@
+*** Begin of history file: Mon Nov 24 15:14:11 2014
+glo map
+exe corr_font
+exe contour
+exe rad2
+exe rad2
+set vsize .4
+set hcol 2
+h/pl 142
+opt nbox
+h/pl 142
+opt nstat
+h/pl 142
+set hcol 1
+h/pl 141 s
+pic/pri 141_2.gif
+set hcol 2
+h/pl 152
+set hcol 1
+h/pl 151 s
+pic/pri 151_2.gif
+set hcol 2
+h/pl 162
+set hcol 1
+h/pl 161 s
+pic/pri 161_2.gif
+h/li
+glo map
+opt liny
+exe zon4
+exe zon4
+exe zon4
+exe zon4
+exe zon4
+exe zon4
+exe zon4
+exe zon4
+exe zon4
+exe zon4
+exe zon4
+exe zon4
+exe zon4
+exe zon4
+exe zon4
+exe zon4
+exe zon4
+exe zon4
+exe zon4
+exe zon4
+exe zon4
+exe zon4
+exe zon4
+exe zon4
+exe zon4
+exe zon4
+exe zon4
+exit
+*** End   of history file: Mon Nov 24 18:36:47 2014

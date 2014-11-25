@@ -1,0 +1,5 @@
+opt nbox
+opt stat
+set hwid 5.
+set vsize .35
+
